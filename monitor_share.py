@@ -1,24 +1,21 @@
 import subprocess, random, time, sys, re, pickle
-from googleapiclient.discovery import build
-from google.oauth2 import service_account
+from build_service import service
 
 BACKUP_ROOT = 'CNI'
 N_TEST = 50
 TEST_SLEEP = 60
-SERVICE_ACCOUNT_FILE = 'dan-drivetest1-2f1b7bd0e7ac.json'
-SCOPES = ['https://www.googleapis.com/auth/drive']
 ID_CACHE = 'random_ids.p'
 
 
-def get_name(file_id, service):
+def get_name(file_id):
     return service.files().get(fileId=file_id, fields='name').execute()['name']
 
-def poll_ids(file_ids, emailAddress, service):
+def poll_ids(file_ids, emailAddress):
     n_total, n_yes = len(file_ids), 0
     for file in file_ids:
-        perms = try_until(get_all_perms, 10, 2, file, service)
+        perms = try_until(get_all_perms, 10, 2, file)
         if emailAddress in perms: n_yes +=1
-        #else: print(try_until(get_name, 10, 2, file, service))
+        #else: print(try_until(get_name, 10, 2, file))
     return n_yes/n_total
 
 def try_until(func, max_tries, sleep_time, *argv):
@@ -33,7 +30,7 @@ def try_until(func, max_tries, sleep_time, *argv):
     raise failed_because
 
 
-def get_all_perms(fileId, service):
+def get_all_perms(fileId):
     permissions = []
     response = service.permissions().list(
             fileId=fileId, 
@@ -56,12 +53,6 @@ def get_all_perms(fileId, service):
 
 def main():
     t_start = time.time()
-
-    credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-    service = build('drive', 'v3', credentials=credentials)
-
-
 
     test_email = sys.argv[1]
 
@@ -89,7 +80,7 @@ def main():
             pickle.dump(sample_ids, f)
 
     while True:
-        shared_fraction = poll_ids(sample_ids, test_email, service)
+        shared_fraction = poll_ids(sample_ids, test_email)
         t_elapsed = int(time.time() - t_start)
         if len(sys.argv) > 2:
             out_file = sys.argv[2]

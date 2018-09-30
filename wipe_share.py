@@ -1,25 +1,12 @@
-from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-#from httplib2 import Http
-#from oauth2client import file, client, tools
-#from oauth2client.tools import argparser
-from google.oauth2 import service_account
 import sys
 import pickle
 import time
 
-SERVICE_ACCOUNT_FILE = 'dan-drivetest1-2f1b7bd0e7ac.json'
-SCOPES = ['https://www.googleapis.com/auth/drive']
 OWNER = 'dwp2111@columbia.edu'
 
 
-def build_service():
-    credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-    return build('drive', 'v3', credentials=credentials)
-
-
-def get_id(email, service):
+def get_id(email):
     perms = service.files().list(
             pageSize=1, 
             q='"{}" in readers'.format(email), 
@@ -38,9 +25,8 @@ def callback(request_id, response, exception):
 
 def main():
 
-    service = build_service()
     unshare_email = sys.argv[1]
-    unshare_id = get_id(unshare_email, service)
+    unshare_id = get_id(unshare_email)
     n_matches, n_prev = 0,0
     while True:
         try:

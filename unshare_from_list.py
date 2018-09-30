@@ -1,16 +1,11 @@
 '''Modified to use service account, but not sure if it's working again after
 the changes
 '''
-from googleapiclient.discovery import build
-from httplib2 import Http
-from oauth2client import file, client, tools
-from oauth2client.tools import argparser
 import pickle
 import time
 import re
+from build_service import service
 
-SERVICE_ACCOUNT_FILE = 'dan-drivetest1-2f1b7bd0e7ac.json'
-SCOPES = 'https://www.googleapis.com/auth/drive'
 UNSHARE_FILE='dwpaley@gmail.com.no.txt'
 UNSHARE_ID='16312335538820483178'
 ID_FILE='paths_ids.p'
@@ -30,13 +25,8 @@ def callback(request_id, response, exception):
 def fileId_from_exception(exception):
     return search_fileId.search(exception.uri).groups()[0]
 
-def build_service():
-    credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-    return build('drive', 'v3', credentials=credentials)
 
 def main():
-    service = build_service()
     with open(UNSHARE_FILE) as f: 
         unshare_lines = [l.strip() for l in f.readlines()]
     with open(ID_FILE, 'rb') as f: 
