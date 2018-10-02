@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 '''Modified to use service account, but not sure if it's working again after
 the changes
 '''

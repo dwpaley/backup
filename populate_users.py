@@ -1,4 +1,5 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
+
 '''
 $ populate_users.py <userlist> <rolelist> <outfile> 
 to produce a pickled list of User objects with name, email, tool quals list

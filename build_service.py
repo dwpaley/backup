@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
 

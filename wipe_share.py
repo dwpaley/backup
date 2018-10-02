@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from googleapiclient.errors import HttpError
 import sys
 import pickle

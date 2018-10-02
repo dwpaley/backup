@@ -1,3 +1,5 @@
+#!/usr/bin/bash
+
 BACKUP_DIR=sandbox2/dest/CNI/CNILabs_backup
 
 cat $BACKUP_DIR/.allowed_users | while read user; do
