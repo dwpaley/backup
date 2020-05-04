@@ -1,16 +1,17 @@
 #!/usr/bin/bash
 
-# call this with $ ./backup.sh <full source string> <dest> <src alias> <port>
+# call this with $ ./backup.sh <full source string> <dest> <src alias> <port> <excludefile>
 
 SRC_DIR=$1
 DEST_DIR=$2
 SRC_ALIAS=$3
 PORT=$4
+EXCLUDE=$5
+ALWAYS_EXCLUDE=/home/dwpaley/backup/always_exclude #CHANGE THIS
 timestamp=$(date "+%Y%m%d_%H%M%S")
-read -d_ datestamp junk < <(echo $timestamp)
 
 logdir=$DEST_DIR/$SRC_ALIAS/log/$timestamp
-historydir=$DEST_DIR/$SRC_ALIAS/history/$datestamp
+historydir=$DEST_DIR/$SRC_ALIAS/history/$timestamp
 backupdir=$DEST_DIR/$SRC_ALIAS/backup
 errlog=$DEST_DIR/backuplog
 
@@ -21,12 +22,12 @@ install --directory $backupdir/
 install --directory $logdir
 touch $logdir/backup
 touch $historydir/../MANIFEST.txt
-touch $historydir/.skip_backup
 
 #find changes since last run
-rsync --dry-run --itemize-changes --out-format="%i|%n|" --recursive \
-    --update --delete --one-file-system --protect-args -e"ssh -p$PORT" \
-    --exclude=".allowed_users" \
+rsync -rltD --dry-run --itemize-changes --out-format="%i|%n|" \
+    --delete --one-file-system --protect-args -e"ssh -p$PORT" \
+    --exclude-from="$EXCLUDE" \
+    --exclude-from="$ALWAYS_EXCLUDE" \
     "$SRC_DIR" $backupdir | \
     sed '/^ *$/d' > \
     $logdir/dryrun 
@@ -62,33 +63,31 @@ sort  --unique /tmp/rsync.list > $logdir/ch_del
 
 cat $logdir/ch_del | while read line
 do
-    if ! grep "$line" $historydir/.skip_backup  
+    if ! grep "===${timestamp}===" $historydir/../MANIFEST.txt
     then
-        if ! grep "===${datestamp}===" $historydir/../MANIFEST.txt
-        then
-            echo >> $historydir/../MANIFEST.txt
-            echo "===${datestamp}===" >> $historydir/../MANIFEST.txt
-        fi
-        echo $line >> $historydir/../MANIFEST.txt
-        echo $line >> $logdir/backup
+        echo >> $historydir/../MANIFEST.txt
+        echo "===${timestamp}===" >> $historydir/../MANIFEST.txt
     fi
+    echo $line >> $historydir/../MANIFEST.txt
+    echo $line >> $logdir/backup
 done
 
-cat $logdir/created >> $historydir/.skip_backup
-cat $logdir/backup >> $historydir/.skip_backup
 
 
 
 #take the changed/deleted files and make a history point
-rsync --update --files-from=$logdir/backup -e"ssh -p$PORT" \
-    --protect-args --no-perms --chmod=ugo=rwX --exclude=".allowed_users" \
+rsync -ltD --files-from=$logdir/backup \
+    --protect-args  \
+    --exclude-from="$EXCLUDE" \
+    --exclude-from="$ALWAYS_EXCLUDE" \
     $backupdir/ \
     $historydir 
     
 #update the main backup directory to mirror the source
-rsync --recursive --update --delete --one-file-system -P \
-    --protect-args -e"ssh -p$PORT" --no-perms --chmod=ugo=rwX \
-    --exclude=".allowed_users" \
+rsync -rltD --delete --one-file-system -P \
+    --protect-args -e"ssh -p$PORT" \
+     --exclude-from="$EXCLUDE"\
+    --exclude-from="$ALWAYS_EXCLUDE" \
     "$SRC_DIR" \
     $backupdir 
 
@@ -103,9 +102,6 @@ fi
 if [ ! -s $logdir/dryrun ]
 then
     rm -rf $logdir
-fi
-
-if [ ! -s $historydir/.skip_backup ]
-then
     rm -rf $historydir
 fi
+

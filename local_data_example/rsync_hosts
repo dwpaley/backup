@@ -1,0 +1,18 @@
+ToolName,BobUser123,123.45.67.89,5432,/cygdrive/c/BobsFiles,TA Instruments Q500 TGA
+Tool2,LarryToolOwner,123.45.67.89,5433,/cygdrive/c/Users,Arbitrary Tool Name,local_data/exclude/Tool2_exclude
+end
+
+
+NOTES:
+-This file is accessed by backup_all.sh.
+-The script will stop reading when it reaches the line "end".
+-The format for each line is tool name, Windows username on the tool computer,
+ IP address (typically for the router that the tool is using), port #, path of the 
+ directory to back up (an absolute path that Cygwin can read), the Badger
+ name of the tool (currently not used for anything), and a file containing 
+ patterns for which matching files will be excluded (this can be omitted).
+ Since sometimes a whole drive is backed up, Windows recycle bins and drive
+ volume information are always excluded.
+
+
+
